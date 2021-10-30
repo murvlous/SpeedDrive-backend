@@ -5,11 +5,13 @@ npm-debug.*
 *.p8
 *.p12
 *.key
+*.cert
 *.mobileprovision
 *.orig.*
 web-build/
 web-report/
 .env
+rds-combined-ca-bundle.pem
 
 # macOS
 .DS_Store
