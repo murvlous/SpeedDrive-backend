@@ -8,8 +8,12 @@ const mailer = require('../../modules/mailer');
 const Aluno = require('../models/Aluno')
 const Instrutor = require('../models/Instrutor')
 const Admin = require('../models/Admin')
+const AWS = require('aws-sdk');
 
 const router = express.Router();
+
+AWS.config.update({ credentials: { accessKeyId: 'AKIA2NSURAS2RG3E3W4G', secretAccessKey: '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' }, region: 'sa-east-1' });
+const arn_topico_sns_novos_cadastros = 'arn:aws:sns:sa-east-1:716363072693:topic-notificacao-novos-cadastros'
 
 function generateToken(params = {}) {
     return jwt.sign(params, authConfig.secret, {} /* { expiresIn: "60d" } */ )
@@ -29,6 +33,27 @@ router.post('/registrarAluno', async(req, res) => {
         console.log(req.body);
         const aluno = await Aluno.create(req.body);
         aluno.senha = undefined
+
+        var notificacao_SNS = {
+            Message: `Novo aluno cadastrado no App Speed Drive.
+E-mail: ${email}
+WhatsApp: ${req.body.whatsapp}
+Primeiro Nome: ${req.body.nome}`,
+            TopicArn: arn_topico_sns_novos_cadastros
+        };
+
+        // Create promise and SNS service object
+        var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(notificacao_SNS).promise();
+
+        // Handle promise's fulfilled/rejected states
+        publishTextPromise.then(
+            function(data) {
+                console.log(`Message ${publishTextPromise.Message} sent to the topic ${publishTextPromise.TopicArn}`);
+                console.log("MessageID is " + data.MessageId);
+            }).catch(
+            function(err) {
+                console.error(err, err.stack);
+            });
 
         return res.send({
             tipoUsuario: 'aluno',
@@ -53,6 +78,27 @@ router.post('/registrarInstrutor', async(req, res) => {
 
         const instrutor = await Instrutor.create(req.body);
         instrutor.senha = undefined
+
+        var notificacao_SNS = {
+            Message: `Novo instrutor cadastrado no App Speed Drive.
+E-mail: ${email}
+WhatsApp: ${req.body.whatsapp}
+Primeiro Nome: ${req.body.nome}`,
+            TopicArn: arn_topico_sns_novos_cadastros
+        };
+
+        // Create promise and SNS service object
+        var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(notificacao_SNS).promise();
+
+        // Handle promise's fulfilled/rejected states
+        publishTextPromise.then(
+            function(data) {
+                console.log(`Message ${publishTextPromise.Message} sent to the topic ${publishTextPromise.TopicArn}`);
+                console.log("MessageID is " + data.MessageId);
+            }).catch(
+            function(err) {
+                console.error(err, err.stack);
+            });
 
         return res.send({
             tipoUsuario: 'instrutor',
